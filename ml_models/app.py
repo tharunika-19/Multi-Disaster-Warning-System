@@ -4,6 +4,7 @@ import pickle
 import numpy as np
 import gdown
 import os
+import pandas as pd
 
 app = Flask(__name__)
 
@@ -60,9 +61,18 @@ def predict_flood():
 @app.route("/predict/cyclone", methods=["POST"])
 def predict_cyclone():
     data = request.json
-    features = np.array([[data["pressure"], data["latitude"], data["longitude"]]])
-    result = cyclone_model.predict(features)[0]
-    return jsonify({"risk": int(result), "message": "High Risk" if result == 1 else "Low Risk"})
 
-if __name__ == "__main__":
-    app.run(debug=True)
+    features = pd.DataFrame([{
+        "pressure": data["pressure"],
+        "category": data["category"],
+        "severity": data["severity"],
+        "latitude": data["latitude"],
+        "longitude": data["longitude"]
+    }])
+
+    result = cyclone_model.predict(features)[0]
+
+    return jsonify({
+        "risk": int(result),
+        "message": "High Risk" if result == 1 else "Low Risk"
+    })
